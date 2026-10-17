@@ -1,0 +1,33 @@
+# version: "3.9"
+
+services:
+  backend:
+    build: ../backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../backend:/app
+    depends_on:
+      - redis
+      - rabbitmq
+
+  celery_worker:
+    build: ../backend
+    # UPDATED: Added -Q default and changed -P to prefork
+    command: celery -A app.celery_app worker --loglevel=info -Q default --pool=prefork
+    depends_on:
+      - redis
+      - rabbitmq
+    volumes:
+      - ../backend:/app
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
